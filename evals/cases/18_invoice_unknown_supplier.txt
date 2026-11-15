@@ -1,0 +1,14 @@
+TAX INVOICE
+Swift Print Solutions
+ABN 74 093 118 552
+
+Bill to: Greenleaf Catering
+Invoice No: SPS-2207
+Invoice date: 09/11/2026
+Due date: 01/12/2026
+
+Menu printing, 2,000 copies      $2,900.00
+GST                              $290.00
+Total due                        $3,190.00
+
+Please pay to BSB 112-879 Account 48120336.

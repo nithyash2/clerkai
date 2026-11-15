@@ -1,0 +1,12 @@
+TAX INVOICE
+Ridgeway Joinery Pty Ltd
+ABN 18 605 233 914
+
+Bill to: Laurel & Finch Architects
+Invoice No: RJ-00932
+Invoice date: 05/11/2026
+Due date: 20/12/2026
+
+Custom joinery, studio fit-out  $22,500.00
+GST                             $2,250.00
+Total due                       $24,750.00

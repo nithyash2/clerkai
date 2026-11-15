@@ -1,0 +1,9 @@
+Australian Taxation Office
+Payment reminder
+
+Client: Daniel Okafor
+Tax file number: 876 543 210
+Reference: 4410 2287 1934
+
+Our records show an amount of $2,340.00 is owing on your income tax account.
+Please pay by 28/11/2026 to avoid general interest charges.

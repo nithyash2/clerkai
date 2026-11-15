@@ -1,0 +1,12 @@
+TAX INVOICE
+Northside IT Services
+ABN 51 824 753 556
+
+Bill to: Laurel & Finch Architects
+Invoice No: NIS-3381
+Invoice date: 31/10/2026
+Due date: 14/11/2026
+
+Monthly managed IT support      $800.00
+GST                             $80.00
+Total due                       $880.00

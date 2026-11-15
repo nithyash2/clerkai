@@ -1,0 +1,12 @@
+TAX INVOICE
+Metro Water Coolers
+ABN 29 410 662 087
+
+Bill to: Brightside Physio Clinic
+Invoice No: MWC-5521
+Invoice date: 15/09/2026
+Due date: 15/10/2026
+
+Water cooler rental, Q3          $420.00
+GST                               $42.00
+Total due                        $462.00

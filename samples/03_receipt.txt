@@ -1,0 +1,8 @@
+PAYMENT RECEIVED - RECEIPT
+
+Receipt No: RC-55120
+Customer: Brightside Physio Clinic
+Amount paid: $462.00 (including GST $42.00)
+Paid by card 4111 1111 1111 1111 on 08/11/2026
+
+Thank you for your payment.

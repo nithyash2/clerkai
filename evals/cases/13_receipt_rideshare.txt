@@ -1,0 +1,9 @@
+Your trip receipt
+Date: 03/11/2026
+Rider: Sarah Mills, Brightside Physio Clinic
+
+Trip fare                        $34.73
+GST                               $3.47
+Total                            $38.20
+
+Thanks for riding with us.

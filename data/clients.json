@@ -1,0 +1,6 @@
+[
+  {"name": "Brightside Physio Clinic", "aliases": ["Brightside Physio"], "entity": "Company", "contact": "Dr Mei Tan", "email": "accounts@brightsidephysio.example", "accountant": "Sarah Nguyen", "services": ["Bookkeeping", "BAS", "Tax return"], "bas_frequency": "quarterly"},
+  {"name": "Laurel & Finch Architects", "aliases": ["Laurel and Finch"], "entity": "Partnership", "contact": "Tom Laurel", "email": "tom@laurelfinch.example", "accountant": "James Patel", "services": ["Bookkeeping", "BAS", "Advisory"], "bas_frequency": "quarterly"},
+  {"name": "Greenleaf Catering", "aliases": ["Greenleaf", "Priya Sandhu"], "entity": "Sole trader", "contact": "Priya Sandhu", "email": "priya@greenleafcatering.example", "accountant": "Sarah Nguyen", "services": ["BAS", "Tax return"], "bas_frequency": "quarterly"},
+  {"name": "Daniel Okafor", "aliases": ["D Okafor"], "entity": "Individual", "contact": "Daniel Okafor", "email": "daniel.okafor@example.com", "accountant": "James Patel", "services": ["Tax return"], "bas_frequency": null}
+]

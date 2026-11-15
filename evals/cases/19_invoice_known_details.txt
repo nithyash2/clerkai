@@ -1,0 +1,14 @@
+TAX INVOICE
+Northside IT Services
+ABN 51 824 753 556
+
+Bill to: Laurel & Finch Architects
+Invoice No: NIS-3402
+Invoice date: 10/11/2026
+Due date: 15/12/2026
+
+Laptop setup (x2)                $400.00
+GST                              $40.00
+Total due                        $440.00
+
+Pay to BSB 013-442 Account 77310465.
