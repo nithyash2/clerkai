@@ -50,7 +50,12 @@ def lookup_client(name: str) -> dict[str, object]:
             best, best_score = c, score
     if best is None or best_score < 0.5:
         return {"found": False}
-    return {"found": True, **{k: v for k, v in best.items() if k != "aliases"}}
+    record = {k: v for k, v in best.items() if k != "aliases"}
+    # TFN hashes stay inside ClerkAI: the agent only needs entity names and types.
+    record["entities"] = [
+        {k: v for k, v in e.items() if k in ("name", "type")} for e in best.get("entities", [])
+    ]
+    return {"found": True, **record}
 
 
 @dataclass(frozen=True)

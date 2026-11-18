@@ -1,0 +1,12 @@
+TAX INVOICE
+Bayside Property Management
+ABN 47 310 228 914
+
+Bill to: Okafor Family Trust
+Invoice No: BPM-7781
+Invoice date: 04/11/2026
+Due date: 25/11/2026
+
+Property management fees, October   $600.00
+GST                                  $60.00
+Total due                            $660.00

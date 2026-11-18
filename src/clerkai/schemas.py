@@ -57,6 +57,7 @@ class Decision(BaseModel):
     hold: bool = False  # payment must not be made until a person verifies it
     reasons: list[str] = Field(default_factory=list)
     tasks: list[str] = Field(default_factory=list)  # follow-up actions for a person
+    filed_under: str | None = None  # the client entity this document belongs to
 
 
 class RunResult(BaseModel):

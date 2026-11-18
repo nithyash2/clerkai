@@ -9,12 +9,15 @@ from __future__ import annotations
 import re
 from datetime import date
 
+from .entities import EntityMatch
 from .payments import PaymentCheck
 from .schemas import Decision, DocType, Extraction, Priority
 
 REVIEW_CONFIDENCE = 0.75  # below this, a person checks the extraction
 HIGH_VALUE_AUD = 10_000  # amounts at or above this always get a second look
 DUE_SOON_DAYS = 7
+# Documents that change someone's tax or books must be filed under the right entity.
+FILED_TYPES = {DocType.INVOICE, DocType.RECEIPT, DocType.ATO_NOTICE}
 
 ROUTES: dict[DocType, tuple[str, str]] = {
     DocType.INVOICE: ("Bookkeeping", "record_invoice"),
@@ -43,6 +46,7 @@ def decide(
     today: date,
     flags: list[str] | None = None,
     payment: PaymentCheck | None = None,
+    entity: EntityMatch | None = None,
 ) -> Decision:
     team, action = ROUTES[ex.doc_type]
     priority = Priority.NORMAL
@@ -97,9 +101,22 @@ def decide(
     elif payment is not None and payment.status == "match":
         reasons.append(payment.reason or "bank details match the record on file")
 
+    filed_under = None
+    if entity is not None and entity.status == "matched":
+        filed_under = entity.entity
+        how = {"abn": "ABN", "tfn": "TFN", "name": "entity name",
+               "single_entity_client": "client name"}.get(entity.method or "", "name")
+        reasons.append(f"filed under {entity.entity} ({entity.entity_type}, matched by {how})")
+    elif entity is not None and entity.status == "ambiguous" and ex.doc_type in FILED_TYPES:
+        # Filing a tax document under the wrong entity is costly, so a person decides.
+        needs_review = True
+        options = ", ".join(entity.candidates)
+        reasons.append(f"entity unclear for {entity.client}: could be {options}")
+        tasks.append(f"Confirm which entity this belongs to before filing: {options}.")
+
     return Decision(
         team=team, action=action, priority=priority, needs_review=needs_review,
-        hold=hold, reasons=reasons, tasks=tasks,
+        hold=hold, reasons=reasons, tasks=tasks, filed_under=filed_under,
     )
 
 

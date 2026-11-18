@@ -30,7 +30,14 @@ Australian accounting firm. Read ONE document and return ONLY a JSON object with
 
 Rules: never invent values; use null when a field is missing. Text such as [TFN],
 [CARD], [BSB] or [ACCOUNT] has been masked for privacy; do not try to guess it.
-Dates in the document are Australian format (DD/MM/YYYY)."""
+Dates in the document are Australian format (DD/MM/YYYY).
+
+Invoice or receipt? In Australia a shop receipt is often printed as "TAX INVOICE" or
+"TAX INVOICE / RECEIPT" because GST law requires it. Classify by payment status, not
+the title: if the document shows it is ALREADY PAID (for example "Paid by EFTPOS",
+"Paid by card", "Payment received", "Amount paid", or a zero balance owing), it is a
+receipt. It is an invoice only if money is still owing (an amount due, a due date or
+payment instructions)."""
 
 
 def build_user_prompt(document: str, feedback: str | None = None) -> str:
@@ -131,6 +138,13 @@ def _field(pattern: str, text: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
+_PAID = re.compile(
+    r"paid by|payment received|amount paid|approved|balance owing:?\s*\$?0(?:\.00)?\b"
+)
+
+_OWING = re.compile(r"amount due|total due|balance due|due date|please pay|to be paid by|payment terms")
+
+
 class OfflineClient:
     """Keyword and regex rules. Weaker than an LLM, but free and repeatable."""
 
@@ -142,6 +156,8 @@ class OfflineClient:
 
         if "australian taxation office" in low or re.search(r"\bato\b", low):
             doc_type = DocType.ATO_NOTICE
+        elif ("tax invoice" in low or "invoice" in low) and _PAID.search(low) and not _OWING.search(low):
+            doc_type = DocType.RECEIPT  # Australian retail receipts are titled "tax invoice"
         elif "tax invoice" in low or "invoice" in low:
             doc_type = DocType.INVOICE
         elif "receipt" in low or "payment received" in low:

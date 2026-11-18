@@ -138,3 +138,17 @@ def test_busy_model_falls_back_to_next_model():
     # the working model is now tried first
     assert client._generate("doc", None) == GOOD
     assert client._client.models.tried == ["main", "backup", "backup"]
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("TAX INVOICE / RECEIPT\nTotal $99.00\nPaid by EFTPOS", "receipt"),
+        ("Tax Invoice\nTotal $267.00\nAmount paid: $267.00  Balance owing: $0.00", "receipt"),
+        ("TAX INVOICE\nTotal due $825.00\nDue date: 20/11/2026", "invoice"),
+        ("TAX INVOICE\nTotal $500.00\nTo be paid by 30/11/2026", "invoice"),
+    ],
+)
+def test_paid_tax_invoices_are_receipts_but_unpaid_ones_are_invoices(text, expected):
+    r = process_document(text, "t", OfflineClient(), today=TODAY, draft_replies=False)
+    assert r.extraction.doc_type.value == expected

@@ -1,0 +1,12 @@
+Officeworks Online
+Tax Invoice
+Order 9012283  |  Ordered 05/11/2026
+
+Bill to: Laurel & Finch Architects
+
+Wide-format plotter paper (x3)    $267.00
+Delivery                           $0.00
+Total                            $267.00
+GST                               $24.27
+
+Amount paid: $267.00   Balance owing: $0.00

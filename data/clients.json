@@ -1,6 +1,131 @@
 [
-  {"name": "Brightside Physio Clinic", "aliases": ["Brightside Physio"], "entity": "Company", "contact": "Dr Mei Tan", "email": "accounts@brightsidephysio.example", "accountant": "Sarah Nguyen", "services": ["Bookkeeping", "BAS", "Tax return"], "bas_frequency": "quarterly"},
-  {"name": "Laurel & Finch Architects", "aliases": ["Laurel and Finch"], "entity": "Partnership", "contact": "Tom Laurel", "email": "tom@laurelfinch.example", "accountant": "James Patel", "services": ["Bookkeeping", "BAS", "Advisory"], "bas_frequency": "quarterly"},
-  {"name": "Greenleaf Catering", "aliases": ["Greenleaf", "Priya Sandhu"], "entity": "Sole trader", "contact": "Priya Sandhu", "email": "priya@greenleafcatering.example", "accountant": "Sarah Nguyen", "services": ["BAS", "Tax return"], "bas_frequency": "quarterly"},
-  {"name": "Daniel Okafor", "aliases": ["D Okafor"], "entity": "Individual", "contact": "Daniel Okafor", "email": "daniel.okafor@example.com", "accountant": "James Patel", "services": ["Tax return"], "bas_frequency": null}
+  {
+    "name": "Brightside Physio Clinic",
+    "aliases": [
+      "Brightside Physio"
+    ],
+    "entity": "Company",
+    "contact": "Dr Mei Tan",
+    "email": "accounts@brightsidephysio.example",
+    "accountant": "Sarah Nguyen",
+    "services": [
+      "Bookkeeping",
+      "BAS",
+      "Tax return"
+    ],
+    "bas_frequency": "quarterly",
+    "entities": [
+      {
+        "name": "Brightside Physio Clinic Pty Ltd",
+        "aliases": [
+          "Brightside Physio Clinic",
+          "Brightside Physio"
+        ],
+        "type": "Company",
+        "abn": "95 471 173 493"
+      }
+    ]
+  },
+  {
+    "name": "Laurel & Finch Architects",
+    "aliases": [
+      "Laurel and Finch"
+    ],
+    "entity": "Partnership",
+    "contact": "Tom Laurel",
+    "email": "tom@laurelfinch.example",
+    "accountant": "James Patel",
+    "services": [
+      "Bookkeeping",
+      "BAS",
+      "Advisory"
+    ],
+    "bas_frequency": "quarterly",
+    "entities": [
+      {
+        "name": "Laurel & Finch Architects",
+        "aliases": [
+          "Laurel and Finch"
+        ],
+        "type": "Partnership",
+        "abn": "25 999 583 278"
+      }
+    ]
+  },
+  {
+    "name": "Greenleaf Catering",
+    "aliases": [
+      "Greenleaf",
+      "Priya Sandhu"
+    ],
+    "entity": "Sole trader",
+    "contact": "Priya Sandhu",
+    "email": "priya@greenleafcatering.example",
+    "accountant": "Sarah Nguyen",
+    "services": [
+      "BAS",
+      "Tax return"
+    ],
+    "bas_frequency": "quarterly",
+    "entities": [
+      {
+        "name": "Greenleaf Catering",
+        "aliases": [
+          "Greenleaf",
+          "Priya Sandhu"
+        ],
+        "type": "Sole trader",
+        "abn": "31 864 452 323"
+      }
+    ]
+  },
+  {
+    "name": "Daniel Okafor",
+    "aliases": [
+      "D Okafor"
+    ],
+    "entity": "Individual",
+    "contact": "Daniel Okafor",
+    "email": "daniel.okafor@example.com",
+    "accountant": "James Patel",
+    "services": [
+      "Tax return"
+    ],
+    "bas_frequency": null,
+    "entities": [
+      {
+        "name": "Daniel Okafor",
+        "aliases": [
+          "D Okafor"
+        ],
+        "type": "Individual",
+        "tfn_sha256": "791b2341dec4adecdc20bb0e9f9cb483106daf81ac54dd777fe1655b5ba5ea85"
+      },
+      {
+        "name": "Okafor Family Trust",
+        "aliases": [
+          "The Okafor Family Trust"
+        ],
+        "type": "Trust",
+        "abn": "84 022 765 333"
+      },
+      {
+        "name": "Okafor Holdings Pty Ltd",
+        "aliases": [
+          "Okafor Holdings"
+        ],
+        "type": "Company",
+        "abn": "98 925 810 340"
+      },
+      {
+        "name": "Okafor Super Fund",
+        "aliases": [
+          "Okafor SMSF",
+          "Okafor Superannuation Fund"
+        ],
+        "type": "SMSF",
+        "abn": "66 248 706 668"
+      }
+    ]
+  }
 ]

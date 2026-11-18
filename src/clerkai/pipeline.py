@@ -21,6 +21,7 @@ from .llm import LLMClient
 from .masking import mask_pii
 from .agent import draft_reply
 from .retry import with_retries
+from .entities import match_entity
 from .payments import check_payment_details
 from .router import decide, failed_decision, risk_flags
 from .schemas import DocType, Extraction, RunResult
@@ -74,7 +75,8 @@ def process_document(
         # Runs on the original text, locally: bank numbers never go to the LLM.
         is_invoice = extraction.doc_type is DocType.INVOICE
         payment = check_payment_details(text, is_invoice)
-        decision = decide(extraction, today, flags, payment)
+        entity = match_entity(text, extraction.client_name)
+        decision = decide(extraction, today, flags, payment, entity)
     else:
         decision = failed_decision(error or "unknown")
 

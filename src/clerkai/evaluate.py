@@ -11,6 +11,8 @@ expected answer. The report covers:
   - review recall: of the documents a person must see, how many were flagged.
     This is the safety metric: a missed review is worse than an extra one.
   - payment redirection: changed bank details caught, and false holds
+  - entity filing: documents filed under the right entity (individual, trust, company,
+    SMSF); filing under the WRONG entity is the costly error, sending to review is safe
   - privacy: whether any sensitive value from the document reached the LLM
   - failures and latency (p50 / p95)
 """
@@ -78,6 +80,8 @@ class CaseResult:
     flagged_review: bool = False
     expected_hold: bool = False
     held: bool = False
+    entity_expected: str | None = None
+    entity_got: str | None = None
     mismatches: list[str] = field(default_factory=list)
 
 
@@ -95,7 +99,11 @@ def run_case(label: dict[str, Any], client: LLMClient) -> CaseResult:
         flagged_review=r.decision.needs_review,
         expected_hold=label.get("hold", False),
         held=r.decision.hold,
+        entity_expected=label.get("entity"),
+        entity_got=r.decision.filed_under or ("REVIEW" if r.decision.needs_review else None),
     )
+    if res.entity_expected and res.entity_got != res.entity_expected:
+        res.mismatches.append(f"entity: expected {res.entity_expected!r}, got {res.entity_got!r}")
 
     if r.status == "failed":
         res.mismatches.append(f"EXTRACTION FAILED: {r.error}")
@@ -142,6 +150,12 @@ def summarise(results: list[CaseResult]) -> dict[str, Any]:
         "review_recall": rate([r.flagged_review for r in must_review]),
         "review_precision": rate([r.expected_review for r in flagged]),
         "fraud_caught": rate([r.held for r in results if r.expected_hold]),
+        "entity_accuracy": rate([r.entity_got == r.entity_expected for r in results if r.entity_expected]),
+        # The costly error: filed under the WRONG entity (sending to review is safe).
+        "wrong_entity": sum(
+            1 for r in results
+            if r.entity_expected and r.entity_got not in (r.entity_expected, "REVIEW", None)
+        ),
         "false_holds": sum(r.held and not r.expected_hold for r in results),
         "leaks": sum(len(r.leaked) for r in results),
         "failures": sum(r.status == "failed" for r in results),
@@ -165,6 +179,8 @@ def to_markdown(summary: dict[str, Any], results: list[CaseResult], llm: str) ->
         f"| Review precision | {summary['review_precision']:.0%} |",
         f"| Payment redirection caught (held) | {summary['fraud_caught']:.0%} |",
         f"| False payment holds | {summary['false_holds']} |",
+        f"| Entity filing accuracy | {summary['entity_accuracy']:.0%} |",
+        f"| Filed under the wrong entity | {summary['wrong_entity']} |",
         f"| Sensitive values leaked to the LLM | {summary['leaks']} |",
         f"| Failed extractions | {summary['failures']} |",
         f"| Latency p50 / p95 | {summary['latency_p50_ms']:.0f} ms / {summary['latency_p95_ms']:.0f} ms |",
@@ -175,7 +191,7 @@ def to_markdown(summary: dict[str, Any], results: list[CaseResult], llm: str) ->
         "| --- | --- | --- |",
     ]
     for r in results:
-        ok = r.routing_ok and all(r.field_checks.values()) and not r.leaked
+        ok = r.routing_ok and all(r.field_checks.values()) and not r.leaked and not any(m.startswith('entity') for m in r.mismatches)
         lines.append(f"| {r.file} | {'pass' if ok else 'FAIL'} | {'; '.join(r.mismatches) or ''} |")
     return "\n".join(lines) + "\n"
 
@@ -212,6 +228,7 @@ def main() -> None:
         or summary["review_recall"] < args.min_review_recall
         or summary["leaks"] > 0
         or summary["fraud_caught"] < 1.0
+        or summary["wrong_entity"] > 0
     )
     sys.exit(1 if failed else 0)
 

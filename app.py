@@ -43,6 +43,8 @@ with tab_process:
         cols[1].metric("Team", d.team)
         cols[2].metric("Priority", d.priority.value)
         cols[3].metric("Needs review", "Yes" if d.needs_review else "No")
+        if d.filed_under:
+            st.info(f"Filed under: {d.filed_under}")
         if d.hold:
             st.error("Payment on hold: the bank details do not match the supplier record.")
         for reason in d.reasons:
