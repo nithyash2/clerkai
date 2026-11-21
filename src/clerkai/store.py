@@ -27,7 +27,11 @@ CREATE TABLE IF NOT EXISTS runs (
     latency_ms    REAL NOT NULL,
     attempts      INTEGER NOT NULL,
     error         TEXT,
-    result_json   TEXT NOT NULL
+    result_json   TEXT NOT NULL,
+    llm_calls     INTEGER NOT NULL DEFAULT 0,
+    tokens_in     INTEGER NOT NULL DEFAULT 0,
+    tokens_out    INTEGER NOT NULL DEFAULT 0,
+    cost_usd      REAL
 );
 CREATE INDEX IF NOT EXISTS idx_runs_created_at ON runs(created_at);
 """
@@ -41,6 +45,18 @@ class RunStore:
         self.conn.row_factory = sqlite3.Row
         self._lock = threading.Lock()
         self.conn.executescript(SCHEMA)
+        self._migrate()
+
+    def _migrate(self) -> None:
+        """Add columns introduced after a database was first created."""
+        have = {r["name"] for r in self.conn.execute("PRAGMA table_info(runs)")}
+        for col, ddl in [("llm_calls", "INTEGER NOT NULL DEFAULT 0"),
+                         ("tokens_in", "INTEGER NOT NULL DEFAULT 0"),
+                         ("tokens_out", "INTEGER NOT NULL DEFAULT 0"),
+                         ("cost_usd", "REAL")]:
+            if col not in have:
+                self.conn.execute(f"ALTER TABLE runs ADD COLUMN {col} {ddl}")
+        self.conn.commit()
 
     def log(self, r: RunResult) -> int:
         with self._lock:
@@ -49,8 +65,9 @@ class RunStore:
     def _log(self, r: RunResult) -> int:
         cur = self.conn.execute(
             """INSERT INTO runs (created_at, source, llm, status, doc_type, confidence, team,
-               action, priority, needs_review, pii_masked, latency_ms, attempts, error, result_json)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               action, priority, needs_review, pii_masked, latency_ms, attempts, error, result_json,
+               llm_calls, tokens_in, tokens_out, cost_usd)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 datetime.now(timezone.utc).isoformat(),
                 r.source,
@@ -67,6 +84,10 @@ class RunStore:
                 r.attempts,
                 r.error,
                 r.model_dump_json(),
+                r.llm_calls,
+                r.tokens_in,
+                r.tokens_out,
+                r.cost_usd,
             ),
         )
         self.conn.commit()
@@ -82,7 +103,10 @@ class RunStore:
                       AVG(status = 'failed') AS failure_rate,
                       AVG(needs_review) AS review_rate,
                       AVG(latency_ms) AS avg_latency_ms,
-                      SUM(pii_masked) AS pii_masked
+                      SUM(pii_masked) AS pii_masked,
+                      AVG(tokens_in + tokens_out) AS avg_tokens,
+                      SUM(cost_usd) AS total_cost_usd,
+                      COUNT(cost_usd) AS priced_runs
                FROM runs"""
         ).fetchone()
         return {k: (row[k] or 0) for k in row.keys()}

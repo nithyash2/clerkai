@@ -14,6 +14,7 @@ import re
 from datetime import datetime
 from typing import Protocol
 
+from .guardrails import UNTRUSTED_NOTE, neutralise_tags
 from .schemas import DocType
 
 SYSTEM_PROMPT = """You are ClerkAI, an assistant that triages the shared inbox of an
@@ -37,11 +38,17 @@ Invoice or receipt? In Australia a shop receipt is often printed as "TAX INVOICE
 the title: if the document shows it is ALREADY PAID (for example "Paid by EFTPOS",
 "Paid by card", "Payment received", "Amount paid", or a zero balance owing), it is a
 receipt. It is an invoice only if money is still owing (an amount due, a due date or
-payment instructions)."""
+payment instructions).
+
+ATO notice or client question? Classify by who wrote the content, not the topic. It is an
+ato_notice only if the document contains the ATO's own correspondence (a notice,
+assessment, statement or reminder written by the Australian Taxation Office), including
+when a client forwards it with the original notice text included. An email written by a
+client that only mentions or asks about an ATO letter is a client_query.""" + "\n\nSecurity: " + UNTRUSTED_NOTE
 
 
 def build_user_prompt(document: str, feedback: str | None = None) -> str:
-    prompt = f"<document>\n{document}\n</document>"
+    prompt = f"<document>\n{neutralise_tags(document)}\n</document>"
     if feedback:
         prompt += (
             "\n\nYour previous answer was rejected by validation with this error:\n"
@@ -90,6 +97,9 @@ class GeminiClient:
                     # the run instead of asking the busy ones again for every document.
                     self.models = (model, *[m for m in self.models if m != model])
                 self.model = model
+                from .usage import record
+
+                record(model, response)
                 return response.text or ""
             except Exception as exc:
                 last = i == len(self.models) - 1

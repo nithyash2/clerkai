@@ -74,3 +74,7 @@ class RunResult(BaseModel):
     llm: str
     error: str | None = None
     draft: dict[str, Any] | None = None  # agent-drafted reply, awaiting human approval
+    llm_calls: int = 0
+    tokens_in: int = 0
+    tokens_out: int = 0
+    cost_usd: float | None = None  # None when model prices are not configured

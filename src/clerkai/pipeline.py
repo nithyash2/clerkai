@@ -22,10 +22,12 @@ from .masking import mask_pii
 from .agent import draft_reply
 from .retry import with_retries
 from .entities import match_entity
+from .guardrails import injection_signals, unsafe_draft
 from .payments import check_payment_details
-from .router import decide, failed_decision, risk_flags
-from .schemas import DocType, Extraction, RunResult
+from .router import _rank, decide, failed_decision, risk_flags
+from .schemas import DocType, Extraction, Priority, RunResult
 from .store import RunStore
+from . import usage
 
 MAX_ATTEMPTS = 2
 
@@ -47,6 +49,7 @@ def process_document(
 ) -> RunResult:
     today = today or date.today()
     start = time.perf_counter()
+    usage.take()  # discard anything left over on this thread
 
     masked = mask_pii(text)
     extraction: Extraction | None = None
@@ -71,6 +74,9 @@ def process_document(
             break
 
     flags = risk_flags(text)
+    injection = injection_signals(text)
+    if injection:
+        flags.append("possible prompt injection: " + "; ".join(injection))
     if extraction:
         # Runs on the original text, locally: bank numbers never go to the LLM.
         is_invoice = extraction.doc_type is DocType.INVOICE
@@ -81,17 +87,33 @@ def process_document(
         decision = failed_decision(error or "unknown")
 
     draft = None
-    if extraction and extraction.doc_type is DocType.CLIENT_QUERY and draft_replies:
+    if injection and decision is not None:
+        decision.needs_review = True
+        if _rank(decision.priority) < _rank(Priority.HIGH):
+            decision.priority = Priority.HIGH
+        decision.tasks.append("Check this document for manipulation before acting on it.")
+    if extraction and extraction.doc_type is DocType.CLIENT_QUERY and draft_replies and injection:
+        decision.reasons.append("no draft reply: the agent does not run on a suspected injection")
+    elif extraction and extraction.doc_type is DocType.CLIENT_QUERY and draft_replies:
         try:
             reply, used = with_retries(lambda: draft_reply(masked.text, extraction, client), sleep=sleep)
             service_retries += used
-            draft = reply.model_dump()
+            problem = unsafe_draft(reply.text)
+            if problem:
+                decision.needs_review = True
+                decision.reasons.append(f"draft reply blocked: {problem}")
+            else:
+                draft = reply.model_dump()
         except Exception as exc:  # a failed draft never blocks triage
             decision.reasons.append(f"reply draft failed: {type(exc).__name__}")
     if service_retries:
         decision.reasons.append(f"recovered from {service_retries} temporary AI service error(s)")
     if masked.total:
         decision.reasons.append(f"masked {masked.total} sensitive value(s) before AI processing")
+
+    calls = usage.take()
+    tokens_in = sum(c.tokens_in for c in calls)
+    tokens_out = sum(c.tokens_out for c in calls)
 
     result = RunResult(
         source=source,
@@ -104,6 +126,10 @@ def process_document(
         llm=client.name,
         error=None if extraction else error,
         draft=draft,
+        llm_calls=len(calls),
+        tokens_in=tokens_in,
+        tokens_out=tokens_out,
+        cost_usd=usage.cost_usd(tokens_in, tokens_out) if calls else None,
     )
     if store is not None:
         result.run_id = store.log(result)

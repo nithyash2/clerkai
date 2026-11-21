@@ -80,8 +80,18 @@ with tab_monitor:
     cols[1].metric("Failure rate", f"{s['failure_rate']:.0%}")
     cols[2].metric("Review rate", f"{s['review_rate']:.0%}")
     cols[3].metric("Avg latency", f"{s['avg_latency_ms']:.0f} ms")
+    cols = st.columns(3)
+    cols[0].metric("Avg tokens per document", f"{s['avg_tokens']:.0f}")
+    if s["priced_runs"]:
+        per_1000 = s["total_cost_usd"] / s["priced_runs"] * 1000
+        cols[1].metric("Total AI cost", f"US${s['total_cost_usd']:.4f}")
+        cols[2].metric("Cost per 1,000 documents", f"US${per_1000:.2f}")
+    else:
+        cols[1].metric("AI cost", "set prices to see")
+        cols[2].caption("Set CLERKAI_PRICE_IN_PER_M and CLERKAI_PRICE_OUT_PER_M (USD per million tokens).")
     runs = pd.read_sql_query(
-        "SELECT id, created_at, source, status, doc_type, team, priority, needs_review, latency_ms "
+        "SELECT id, created_at, source, status, doc_type, team, priority, needs_review, latency_ms, "
+        "llm_calls, tokens_in, tokens_out, cost_usd "
         "FROM runs ORDER BY id DESC LIMIT 200",
         store.conn,
     )
