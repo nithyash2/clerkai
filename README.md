@@ -35,7 +35,8 @@ document ─> mask PII ─> LLM extraction ─> validate (Pydantic) ────
 8. **Prompt-injection defence.** ClerkAI reads documents written by strangers, so it defends in layers. Known injection patterns ("ignore your instructions", fake `</document>` tags, "do not flag this") send the document to a person; documents are wrapped as untrusted data and fake tags are neutralised; the agent never runs on a suspected injection; and drafts containing links or bank details are blocked. Most importantly, the LLM never makes a risky decision: routing, payment holds and entity filing are Python rules, so even an undetected injection cannot release a payment, skip a review or send an email.
 9. **Resilience.** Busy-model and rate-limit errors are retried with exponential backoff and jitter, and the client falls back to a second model when the main one is overloaded. Permanent errors are not retried.
 10. **Monitoring and cost.** Every run is logged with status, latency, attempts, confidence, PII counts, LLM calls and input/output tokens, shown as failure rate, review rate, latency, tokens per document and cost per 1,000 documents (prices are configuration, set from the provider's pricing page).
-11. **Evaluation.** A labelled test set measures field accuracy, routing accuracy, review recall, privacy leaks and latency, and CI fails if privacy or safety gets worse.
+11. **Inbox automation.** `python -m clerkai watch` checks a demo Gmail inbox over IMAP every minute, processes each new email and attachment through the full pipeline, posts a Slack alert for anything held, flagged or failed (bank numbers shown only as their last three digits), and marks the email as read. Message-IDs are stored, so an email is never processed twice even after a restart, and a failure alert is sent once if the watcher keeps failing, then a recovery message.
+12. **Evaluation.** A labelled test set measures field accuracy, routing accuracy, review recall, privacy leaks and latency, and CI fails if privacy or safety gets worse.
 
 ## Try it
 
@@ -51,12 +52,21 @@ streamlit run app.py                     # demo screen: process, review queue, m
 uvicorn clerkai.api:app --reload     # API with docs at http://localhost:8000/docs
 python -m clerkai samples            # process the sample folder in the terminal
 python -m clerkai.evaluate           # accuracy report on the labelled test set
-pytest                                   # 80 tests, no API key needed
+pytest                                   # 87 tests, no API key needed
 
 # Or run the API in Docker
 docker build -t clerkai .
 docker run -p 8000:8000 -e GEMINI_API_KEY clerkai
 ```
+
+## Automation setup
+
+1. Create a **demo** Gmail inbox (never a personal one), turn on 2-Step Verification and create an **App Password**.
+2. Optional: create a Slack incoming webhook for a channel such as `#clerkai-alerts`.
+3. Copy `.env.example` to `.env` (it is git-ignored) and fill in `GEMINI_API_KEY`, `CLERKAI_IMAP_USER`, `CLERKAI_IMAP_PASSWORD` and, if you have one, `CLERKAI_SLACK_WEBHOOK`.
+4. Run `python -m clerkai watch`, send an invoice to the demo inbox, and watch the alert arrive. Use `--once` to run a single check from a scheduler.
+
+The tests never touch real services: they force offline mode and use a fake inbox, even when `.env` holds real keys.
 
 ### API
 
@@ -149,7 +159,8 @@ This is a portfolio project with synthetic data, not legal advice or a complianc
 - [x] Layered prompt-injection defence with its own evaluation cases
 - [x] Token and cost tracking per document
 - [ ] Prompt-injection benchmark on Microsoft's LLMail-Inject dataset
-- [ ] Automation: inbox watcher, Teams/Slack notifications, tracker sheet, failure alerts, n8n workflow
+- [x] Automation: inbox watcher (IMAP), Slack alerts, failure alerts, duplicate protection
+- [ ] n8n workflow calling the API
 - [x] Evaluation harness: labelled test set with field accuracy, routing accuracy, review recall, privacy and latency
 - [x] Docker image and GitHub Actions CI with an evaluation quality gate
 - [ ] Vector search (embeddings) for the knowledge base, cloud deployment

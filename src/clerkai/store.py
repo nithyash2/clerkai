@@ -34,6 +34,11 @@ CREATE TABLE IF NOT EXISTS runs (
     cost_usd      REAL
 );
 CREATE INDEX IF NOT EXISTS idx_runs_created_at ON runs(created_at);
+CREATE TABLE IF NOT EXISTS processed_messages (
+    message_id    TEXT PRIMARY KEY,
+    subject       TEXT,
+    processed_at  TEXT NOT NULL
+);
 """
 
 
@@ -92,6 +97,21 @@ class RunStore:
         )
         self.conn.commit()
         return int(cur.lastrowid or 0)
+
+    def already_processed(self, message_id: str) -> bool:
+        with self._lock:
+            row = self.conn.execute(
+                "SELECT 1 FROM processed_messages WHERE message_id = ?", (message_id,)
+            ).fetchone()
+        return row is not None
+
+    def mark_processed(self, message_id: str, subject: str = "") -> None:
+        with self._lock:
+            self.conn.execute(
+                "INSERT OR IGNORE INTO processed_messages VALUES (?, ?, ?)",
+                (message_id, subject, datetime.now(timezone.utc).isoformat()),
+            )
+            self.conn.commit()
 
     def stats(self) -> dict[str, float]:
         with self._lock:

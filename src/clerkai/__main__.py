@@ -1,19 +1,43 @@
-"""Command line: process a folder of documents and print a summary.
+"""Command line.
 
-    python -m clerkai samples/
+    python -m clerkai samples/         process a folder of documents and print a summary
+    python -m clerkai watch            watch the demo inbox and process new emails
+    python -m clerkai watch --once     check the inbox once and exit
 """
 
 from __future__ import annotations
 
 import argparse
+import sys
 from pathlib import Path
 
+from .config import load_env
 from .llm import get_client
 from .pipeline import process_document
 from .store import RunStore
 
 
+def watch_main(argv: list[str]) -> None:
+    from .inbox import watch
+
+    parser = argparse.ArgumentParser(prog="clerkai watch", description="Watch the inbox.")
+    parser.add_argument("--interval", type=int, default=60, help="seconds between checks")
+    parser.add_argument("--once", action="store_true", help="check once and exit")
+    parser.add_argument("--db", default="clerkai.db", help="SQLite run log path")
+    args = parser.parse_args(argv)
+    client = get_client()
+    print(f"LLM: {client.name}. Watching {args.interval}s; press Ctrl+C to stop.")
+    try:
+        watch(client, RunStore(args.db), interval=args.interval, once=args.once)
+    except KeyboardInterrupt:
+        print("Stopped.")
+
+
 def main() -> None:
+    load_env()
+    if len(sys.argv) > 1 and sys.argv[1] == "watch":
+        watch_main(sys.argv[2:])
+        return
     parser = argparse.ArgumentParser(description="Triage an accounting inbox with AI.")
     parser.add_argument("folder", type=Path, help="Folder of .txt documents")
     parser.add_argument("--db", default="clerkai.db", help="SQLite run log path")

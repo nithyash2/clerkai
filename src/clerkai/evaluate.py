@@ -29,6 +29,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+from .config import load_env
 from .llm import LLMClient, OfflineClient, get_client
 from .pipeline import process_document
 from .tools import lookup_client
@@ -234,6 +235,7 @@ def main() -> None:
     parser.add_argument("--min-routing", type=float, default=0.0, help="exit 1 below this")
     parser.add_argument("--min-review-recall", type=float, default=0.0, help="exit 1 below this")
     args = parser.parse_args()
+    load_env()
 
     client = OfflineClient() if args.llm == "offline" else get_client()
     summary, results = evaluate(client)

@@ -12,7 +12,10 @@ from fastapi import FastAPI, File, HTTPException, UploadFile
 from pydantic import BaseModel
 
 from .documents import SUPPORTED, read_bytes
+from .config import load_env
 from .llm import get_client
+
+load_env()
 from .pipeline import process_document
 from .schemas import RunResult
 from .store import RunStore

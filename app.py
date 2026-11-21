@@ -10,7 +10,10 @@ import json
 import pandas as pd
 import streamlit as st
 
+from clerkai.config import load_env
 from clerkai.documents import SUPPORTED, read_bytes
+
+load_env()
 from clerkai.llm import get_client
 from clerkai.pipeline import process_document
 from clerkai.store import RunStore
